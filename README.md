@@ -35,7 +35,7 @@ Trợ lý ghi và tổng hợp chi tiêu cá nhân với input tiếng Việt t�
     └── 02-solution-design/
         ├── 1-map-and-format.md                      🎯 KẾT QUẢ CUỐI Bài 2
         └── artifact/
-            ├── 1-uiux/         (card.md + demo.md — ASCII 4 states)
+            ├── 1-uiux/         (card.md + demo.md + demo.html — ASCII 4 states)
             ├── 2-prompt/       (card.md + demo.md — System prompt + JSON schema)
             └── 3-architecture/ (card.md + demo.md — ASCII data flow + 4 schema)
 ```
