@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Demo UI — F-03 Lóng số lớn dispute 10x · Track 04</title>
+<style>
+  :root {
+    --bg: #f4f5f7;
+    --ink: #1f2328;
+    --ink-soft: #57606a;
+    --border: #d0d7de;
+
+    --success-bg: #ddf4e2;
+    --success-bd: #2da44e;
+    --warn-bg: #fff8c5;
+    --warn-bd: #d4a72c;
+    --outlier-bg: #ffece1;
+    --outlier-bd: #cf5500;
+    --neutral-bg: #f0f2f4;
+    --neutral-bd: #6e7781;
+
+    --radius: 12px;
+    --shadow: 0 1px 3px rgba(31,35,40,0.08), 0 4px 12px rgba(31,35,40,0.06);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    padding: 32px 20px 80px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    line-height: 1.5;
+  }
+
+  header {
+    max-width: 900px;
+    margin: 0 auto 32px;
+  }
+  header h1 {
+    font-size: 22px;
+    margin: 0 0 8px;
+  }
+  header p {
+    margin: 0;
+    color: var(--ink-soft);
+    font-size: 14px;
+  }
+  header code {
+    background: #eaeef2;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 13px;
+  }
+
+  .state-block {
+    max-width: 900px;
+    margin: 0 auto 48px;
+    display: grid;
+    grid-template-columns: 360px 1fr;
+    gap: 24px;
+    align-items: start;
+  }
+  @media (max-width: 720px) {
+    .state-block { grid-template-columns: 1fr; }
+  }
+
+  .state-label {
+    grid-column: 1 / -1;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.4px;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    margin-bottom: -8px;
+  }
+
+  /* ============ CARD BASE ============ */
+  .card {
+    background: #fff;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    border-top: 4px solid var(--border);
+    padding: 16px 18px;
+    font-size: 14px;
+  }
+
+  .card .meta {
+    color: var(--ink-soft);
+    font-size: 12px;
+  }
+
+  .card .raw {
+    background: #f6f8fa;
+    border-left: 3px solid var(--ink-soft);
+    padding: 8px 10px;
+    border-radius: 4px;
+    font-style: italic;
+    color: var(--ink-soft);
+    margin: 8px 0 12px;
+  }
+
+  .card h3 {
+    margin: 0 0 12px;
+    font-size: 15px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .card .row {
+    display: flex;
+    justify-content: space-between;
+    padding: 6px 0;
+    border-bottom: 1px dashed #eaeef2;
+    font-size: 13px;
+  }
+  .card .row:last-child { border-bottom: none; }
+  .card .row .label { color: var(--ink-soft); }
+
+  .btn-row {
+    display: flex;
+    gap: 8px;
+    margin-top: 14px;
+    flex-wrap: wrap;
+  }
+  .btn {
+    border: 1px solid var(--border);
+    background: #fff;
+    padding: 8px 14px;
+    border-radius: 8px;
+    font-size: 13px;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .btn-primary {
+    background: #0969da;
+    color: #fff;
+    border-color: #0969da;
+  }
+  .btn-primary:disabled {
+    background: #afb8c1;
+    border-color: #afb8c1;
+    cursor: not-allowed;
+  }
+  .btn-danger { color: #cf222e; }
+
+  /* ============ STATE 1 — DEFAULT ============ */
+  .card-default {
+    border-top-color: var(--success-bd);
+    background: var(--success-bg);
+  }
+  .card-default h3 .check {
+    color: var(--success-bd);
+    font-weight: 700;
+  }
+
+  /* ============ STATE 2 — AMBIGUOUS ============ */
+  .card-ambiguous {
+    border-top-color: var(--warn-bd);
+  }
+  .card-ambiguous .warn-banner {
+    background: var(--warn-bg);
+    padding: 8px 10px;
+    border-radius: 6px;
+    font-size: 13px;
+    margin: 8px 0;
+    color: #5c4813;
+  }
+  .options {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin: 10px 0;
+  }
+  .option {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    cursor: pointer;
+  }
+  .option-radio {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    border: 2px solid var(--border);
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+  .option-content { flex: 1; }
+  .option-amount { font-weight: 600; }
+  .option-hint {
+    display: block;
+    font-size: 12px;
+    color: var(--ink-soft);
+    margin-top: 2px;
+  }
+  .field-group {
+    margin: 10px 0;
+  }
+  .field-group label {
+    display: block;
+    font-size: 12px;
+    color: var(--ink-soft);
+    margin-bottom: 4px;
+  }
+  .field-group .select {
+    width: 100%;
+    padding: 8px 10px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: #fff;
+    font-size: 13px;
+    font-family: inherit;
+  }
+
+  /* ============ STATE 3 — OUTLIER ============ */
+  .card-outlier {
+    border-top-color: var(--outlier-bd);
+  }
+  .card-outlier h3 .icon { color: var(--outlier-bd); }
+  .card-outlier .comparison {
+    background: var(--outlier-bg);
+    padding: 10px 12px;
+    border-radius: 6px;
+    margin: 10px 0;
+    font-size: 13px;
+  }
+  .card-outlier .comparison strong { color: var(--outlier-bd); }
+  .checkbox-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 0;
+    font-size: 13px;
+  }
+  .checkbox-row input { width: 16px; height: 16px; }
+
+  /* ============ STATE 4 — REFUSE SILENT SAVE ============ */
+  .card-refuse {
+    border-top-color: var(--neutral-bd);
+    background: var(--neutral-bg);
+  }
+  .card-refuse .draft-note {
+    font-size: 13px;
+    color: var(--ink-soft);
+    background: #fff;
+    padding: 10px;
+    border-radius: 6px;
+    border: 1px dashed var(--border);
+    margin: 10px 0;
+  }
+  .card-refuse .vo {
+    display: flex;
+    gap: 10px;
+    margin: 8px 0;
+  }
+  .vo-num {
+    flex: 1;
+    text-align: center;
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px;
+    font-size: 13px;
+  }
+  .vo-num .big {
+    display: block;
+    font-size: 20px;
+    font-weight: 700;
+  }
+
+  /* ============ ANNOTATIONS ============ */
+  .annotations {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px 18px;
+    font-size: 13px;
+  }
+  .annotations h4 {
+    margin: 0 0 10px;
+    font-size: 14px;
+  }
+  .annotations ul {
+    margin: 0;
+    padding-left: 18px;
+  }
+  .annotations li { margin-bottom: 8px; }
+  .annotations code {
+    background: #eaeef2;
+    padding: 1px 5px;
+    border-radius: 3px;
+    font-size: 12px;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Demo UI — Lớp giao diện cho F-03</h1>
+  <p>
+    Track 04 · AI Expense Assistant · Rủi ro chính: <code>F-03 — Lóng số lớn dispute 10x</code><br>
+    Companion ASCII: <code>./demo.md</code> · Solution card: <code>./card.md</code>
+  </p>
+</header>
+
+<!-- ============ STATE 1 — DEFAULT ============ -->
+<section class="state-block">
+  <div class="state-label">State 1 — Default (số rõ, save 1-tap)</div>
+
+  <div class="card card-default">
+    <h3><span class="check">✓</span> Đã ghi</h3>
+    <div class="row">
+      <span class="label">Số tiền</span>
+      <strong>50.000đ</strong>
+    </div>
+    <div class="row">
+      <span class="label">Hạng mục</span>
+      <span>Cà phê</span>
+    </div>
+    <div class="row">
+      <span class="label">Thời gian</span>
+      <span>Hôm nay · 8:30</span>
+    </div>
+    <div class="btn-row">
+      <button class="btn">Sửa</button>
+      <button class="btn">Xem chi tiết</button>
+    </div>
+  </div>
+
+  <div class="annotations">
+    <h4>Annotations</h4>
+    <ul>
+      <li>Câu input rõ ràng (<code>50k</code>, đơn vị xác định) → KHÔNG cần card mở rộng, chỉ confirmation rút gọn 1 dòng.</li>
+      <li>Wording "Đã ghi" → user biết DB đã commit. Không hỏi gì thêm vì không ambiguity.</li>
+      <li>Nút "Sửa" luôn có → user có 60s undo dễ dàng nếu nhớ ra thông tin sai.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ============ STATE 2 — AMBIGUOUS ============ -->
+<section class="state-block">
+  <div class="state-label">State 2 — Ambiguous unit (case F-03: "3 củ rưỡi")</div>
+
+  <div class="card card-ambiguous">
+    <h3>Bạn vừa nói:</h3>
+    <div class="raw">"macbook 3 củ rưỡi trả góp"</div>
+
+    <div class="warn-banner">
+      ⚠ "Củ rưỡi" có nhiều cách hiểu — chọn giúp mình:
+    </div>
+
+    <div class="options">
+      <label class="option">
+        <span class="option-radio"></span>
+        <span class="option-content">
+          <span class="option-amount">3.500.000đ</span>
+          <span class="option-hint">(3,5 triệu)</span>
+        </span>
+      </label>
+      <label class="option">
+        <span class="option-radio"></span>
+        <span class="option-content">
+          <span class="option-amount">35.000.000đ</span>
+          <span class="option-hint">(35 triệu) · Gợi ý theo ngữ cảnh "macbook"</span>
+        </span>
+      </label>
+      <label class="option">
+        <span class="option-radio"></span>
+        <span class="option-content">
+          <span class="option-amount">Đây là đơn vị khác</span>
+          <span class="option-hint">Sửa lại số tiền</span>
+        </span>
+      </label>
+    </div>
+
+    <div class="field-group">
+      <label>Hạng mục</label>
+      <div class="select">Đồ điện tử ▾</div>
+    </div>
+    <div class="field-group">
+      <label>Phương thức</label>
+      <div class="select">Trả góp ▾</div>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn btn-primary" disabled>Xác nhận</button>
+      <button class="btn">Sửa lại</button>
+      <button class="btn btn-danger">Huỷ</button>
+    </div>
+  </div>
+
+  <div class="annotations">
+    <h4>Annotations</h4>
+    <ul>
+      <li><strong>Raw input ở đầu</strong> → user thấy lại câu mình vừa nói, đối chiếu được. Không phải "AI hiểu là...".</li>
+      <li><strong>3 option ngang hàng</strong> — option ② có tag "Gợi ý theo ngữ cảnh" nhưng vẫn là radio ○, không pre-selected. Tránh anchor bias.</li>
+      <li><strong>Hạng mục + Phương thức pre-fill</strong> từ keyword ("macbook" → Đồ điện tử, "trả góp" → Trả góp).</li>
+      <li><strong>Nút Xác nhận disabled</strong> đến khi user chọn 1 radio — không cho ấn nhanh skip.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ============ STATE 3 — OUTLIER ============ -->
+<section class="state-block">
+  <div class="state-label">State 3 — Outlier warning (giao dịch ≥5tr)</div>
+
+  <div class="card card-outlier">
+    <h3><span class="icon">⚠</span> Xác nhận giao dịch lớn</h3>
+    <div class="row"><span class="label">Số tiền</span><strong>35.000.000đ</strong></div>
+    <div class="row"><span class="label">Hạng mục</span><span>Đồ điện tử</span></div>
+    <div class="row"><span class="label">Phương thức</span><span>Trả góp</span></div>
+    <div class="row"><span class="label">Thời gian</span><span>Hôm nay · 14:23</span></div>
+
+    <div class="comparison">
+      Trung bình ngày bạn chi: <strong>230.000đ</strong><br>
+      Khoản này gấp <strong>~150x</strong> trung bình.
+    </div>
+
+    <div class="checkbox-row">
+      <input type="checkbox" id="outlier-confirm">
+      <label for="outlier-confirm">Tôi đã kiểm tra số tiền đúng</label>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn btn-primary" disabled>Xác nhận ghi</button>
+      <button class="btn">Sửa</button>
+    </div>
+  </div>
+
+  <div class="annotations">
+    <h4>Annotations</h4>
+    <ul>
+      <li><strong>Checkbox bắt buộc tick</strong> trước khi "Xác nhận ghi" sáng — friction đủ để user dừng 1 giây.</li>
+      <li><strong>So sánh "gấp 150x trung bình"</strong> → cung cấp anchor số liệu để user kiểm tra. Không nói "AI nghi ngờ", chỉ trình bày số.</li>
+      <li><strong>Audit auto-snapshot</strong>: khi user tick + xác nhận, app lưu full state này vào audit log (xem <code>3-architecture/demo.md</code>) → dispute resolution sau này có evidence.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ============ STATE 4 — REFUSE SILENT SAVE ============ -->
+<section class="state-block">
+  <div class="state-label">State 4 — Refuse silent save (user đang lái xe — pressure trap)</div>
+
+  <div class="card card-refuse">
+    <h3>Đang ghi tạm — chưa lưu</h3>
+    <div class="raw">"3 củ rưỡi" — có 2 cách hiểu</div>
+
+    <div class="vo">
+      <div class="vo-num">
+        <span class="big">⓵</span>
+        3.500.000đ
+      </div>
+      <div class="vo-num">
+        <span class="big">⓶</span>
+        35.000.000đ
+      </div>
+    </div>
+
+    <div class="draft-note">
+      ● Mình giữ nháp <strong>5 phút</strong>.<br>
+      Khi dừng xe, bấm 1 nút để chọn — hoặc nói <strong>"một"</strong> / <strong>"hai"</strong>.
+    </div>
+
+    <div class="btn-row">
+      <button class="btn btn-primary">Để nháp 5 phút</button>
+      <button class="btn">Chọn ⓵</button>
+      <button class="btn">Chọn ⓶</button>
+    </div>
+  </div>
+
+  <div class="annotations">
+    <h4>Annotations</h4>
+    <ul>
+      <li><strong>"Đang ghi tạm — chưa lưu"</strong> → user vẫn nghe được tóm tắt giọng (voice playback) khi đang lái xe, không cần nhìn màn hình ngay.</li>
+      <li><strong>Voice command 1-từ</strong> — user nói "một"/"hai" để chọn, không cần thả vô lăng.</li>
+      <li><strong>Mặc định "Để nháp 5 phút"</strong> → nếu user không phản hồi, hết 5 phút app gửi push notification, KHÔNG auto-commit option nào.</li>
+      <li>Wording không đổ lỗi user ("đừng nguy hiểm khi lái xe") — chỉ cho safer default.</li>
+    </ul>
+  </div>
+</section>
+
+<footer style="max-width:900px;margin:24px auto 0;color:var(--ink-soft);font-size:12px;">
+  Demo tĩnh — không có JS, không có state transition. Để xem full state machine + user testing plan, mở <code>./demo.md</code>.
+</footer>
+
+</body>
+</html>
